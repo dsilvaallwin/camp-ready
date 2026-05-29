@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Camp Ready</title>
+<link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--forest:#1a2e1a;--moss:#3d5c2e;--sage:#7a9e5f;--amber:#e8a33a;--cream:#f5efe0;--smoke:#e8e0d0;--ash:#b0a898;--char:#2c2416;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:var(--cream);color:var(--char);font-family:'DM Sans',sans-serif;min-height:100vh;}
+header{background:var(--forest);color:var(--cream);padding:20px 18px 16px;position:relative;overflow:hidden;}
+header::before{content:'';position:absolute;top:-40px;right:-40px;width:170px;height:170px;border-radius:50%;background:var(--moss);opacity:0.35;}
+header h1{font-family:'Abril Fatface',serif;font-size:1.75rem;letter-spacing:1px;position:relative;}
+header p{font-size:0.7rem;color:var(--sage);margin-top:3px;letter-spacing:0.5px;position:relative;}
+.tabs{display:flex;background:#f0ead8;border-bottom:2px solid #d8d0c0;}
+.tab{flex:1;padding:10px 6px;font-size:0.8rem;font-weight:700;text-align:center;cursor:pointer;color:var(--ash);border-bottom:3px solid transparent;font-family:'DM Sans',sans-serif;letter-spacing:0.2px;}
+.tab.active{color:var(--moss);border-bottom-color:var(--moss);background:white;font-weight:800;}
+.people-bar{background:#ede7d5;border-bottom:1px solid #d8d0c0;padding:8px 14px;}
+.people-bar-top{display:flex;align-items:center;gap:8px;}
+.people-bar-label{font-size:0.66rem;font-weight:700;color:var(--ash);text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;flex:1;}
+.people-toggle{font-size:0.68rem;color:var(--moss);font-weight:600;cursor:pointer;white-space:nowrap;padding:2px 8px;border:1.5px solid var(--moss);border-radius:99px;background:white;}
+.people-chips-wrap{overflow:hidden;transition:max-height 0.3s ease;max-height:0;}
+.people-chips-wrap.open{max-height:300px;}
+.people-chips{display:flex;gap:5px;flex-wrap:wrap;align-items:center;padding:8px 0 4px;}
+.add-person-inline{display:flex;gap:5px;padding-bottom:6px;}
+.add-person-inline input{flex:1;border:1.5px solid #ccc;border-radius:7px;padding:4px 8px;font-size:0.74rem;font-family:'DM Sans',sans-serif;outline:none;-webkit-appearance:none;}
+.add-person-inline button{background:var(--moss);color:white;border:none;border-radius:7px;padding:4px 10px;font-size:0.74rem;cursor:pointer;}
+.person-chip{display:inline-flex;align-items:center;gap:4px;background:white;border:1.5px solid #ccc;border-radius:99px;padding:2px 7px 2px 4px;font-size:0.72rem;font-weight:500;}
+.person-chip .rm{cursor:pointer;color:#bbb;font-size:0.8rem;margin-left:2px;padding:0 2px;}
+.people-summary{display:flex;align-items:center;gap:4px;margin-top:5px;flex-wrap:wrap;}
+/* add-person now inline inside collapsible people panel */
+.progress-wrap{background:var(--smoke);padding:9px 14px;display:flex;align-items:center;gap:9px;border-bottom:1px solid #d0c8b8;position:sticky;top:0;z-index:20;}
+.progress-bar-outer{flex:1;height:7px;background:#d0c8b8;border-radius:99px;overflow:hidden;}
+.progress-bar-inner{height:100%;background:linear-gradient(90deg,var(--moss),var(--amber));border-radius:99px;transition:width 0.4s ease;width:0%;}
+.progress-label{font-size:0.71rem;font-weight:700;color:var(--moss);white-space:nowrap;}
+.btn-reset{background:none;border:1.5px solid var(--ash);border-radius:5px;padding:2px 8px;font-size:0.66rem;font-family:'DM Sans',sans-serif;color:var(--ash);cursor:pointer;}
+main{padding:14px 10px 80px;max-width:740px;margin:0 auto;}
+.category{margin-bottom:14px;border-radius:11px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.07);}
+.cat-header{display:flex;align-items:center;gap:9px;padding:10px 14px;cursor:pointer;user-select:none;}
+.cat-header .icon{font-size:1.1rem;}
+.cat-header .cat-name{font-family:'Abril Fatface',serif;font-size:0.93rem;flex:1;color:#eee;}
+.cat-header .cat-count{font-size:0.64rem;font-weight:700;background:rgba(255,255,255,0.2);border-radius:99px;padding:1px 7px;color:#eee;}
+.cat-header .chevron{font-size:0.58rem;opacity:0.7;color:#eee;transition:transform 0.2s;}
+.category.collapsed .chevron{transform:rotate(-90deg);}
+.cat-items{background:white;overflow:hidden;max-height:99999px;transition:max-height 0.35s ease;}
+.category.collapsed .cat-items{max-height:0;}
+.item{border-bottom:1px solid #f0ebe0;}
+.item:last-of-type{border-bottom:none;}
+.item-main{display:flex;align-items:center;gap:7px;padding:8px 12px;}
+.item.all-checked .item-label{color:var(--ash);text-decoration:line-through;}
+.check-box{width:20px;height:20px;border-radius:4px;border:2px solid #ccc;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:0.7rem;font-weight:700;color:white;transition:all 0.15s;}
+.check-box.done{background:var(--moss);border-color:var(--moss);}
+.check-box.partial{background:var(--amber);border-color:var(--amber);}
+.item-label{flex:1;font-size:0.82rem;line-height:1.3;cursor:pointer;}
+.badge-must{font-size:0.57rem;font-weight:700;padding:1px 5px;border-radius:99px;background:#ffe0e0;color:#a03030;text-transform:uppercase;flex-shrink:0;}
+.av{border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:700;color:white;flex-shrink:0;border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.15);}
+.avatars-row{display:inline-flex;align-items:center;margin-right:3px;}
+.avatars-row .av+.av{margin-left:-7px;}
+.checked-by-row{display:flex;align-items:center;gap:6px;padding:2px 12px 6px 38px;flex-wrap:wrap;}
+.checker-badge{display:inline-flex;align-items:center;gap:3px;font-size:0.65rem;color:var(--ash);padding:3px 8px;border-radius:99px;cursor:pointer;}
+.checker-badge.done-check{color:var(--moss);font-weight:600;background:#eef5e8;}
+/* ASSIGN BTN */
+.assign-btn{width:24px;height:24px;border-radius:50%;border:1.5px dashed #bbb;background:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:0.7rem;color:#bbb;flex-shrink:0;transition:all 0.15s;}
+.assign-btn.has-assigned{border-color:var(--sage);color:var(--sage);}
+/* MODAL OVERLAY for dropdown - covers full screen so tap-outside works perfectly */
+.modal-overlay{display:none;position:fixed;inset:0;z-index:200;background:transparent;}
+.modal-overlay.open{display:block;}
+.assign-modal{position:fixed;background:white;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.18);z-index:201;min-width:180px;overflow:hidden;}
+.assign-modal .modal-title{padding:10px 14px 6px;font-size:0.65rem;color:#aaa;text-transform:uppercase;letter-spacing:0.5px;font-weight:700;background:#fafaf7;border-bottom:1px solid #f0ebe0;}
+.assign-modal .modal-item{display:flex;align-items:center;gap:8px;padding:10px 14px;font-size:0.8rem;cursor:pointer;border-bottom:1px solid #f8f5f0;}
+.assign-modal .modal-item:last-child{border-bottom:none;}
+.assign-modal .modal-item.selected{background:#eef5e8;font-weight:600;}
+.assign-modal .modal-item .dd-check{width:15px;height:15px;border-radius:3px;border:1.5px solid #ccc;display:inline-flex;align-items:center;justify-content:center;font-size:0.55rem;color:white;flex-shrink:0;}
+.assign-modal .modal-item.selected .dd-check{background:var(--moss);border-color:var(--moss);}
+.assign-modal .clear-btn{display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:0.76rem;cursor:pointer;color:#c0392b;background:#fff8f8;border-top:1px solid #f0ebe0;}
+.assign-modal .no-people{padding:12px 14px;font-size:0.76rem;color:#aaa;font-style:italic;}
+.del-btn{background:none;border:none;cursor:pointer;color:#ddd;font-size:0.9rem;padding:4px;border-radius:4px;flex-shrink:0;line-height:1;}
+.del-btn:active{color:#c0392b;}
+/* COST */
+.cost-section{background:#fdfbf7;border-top:1px dashed #e8e0d0;padding:8px 12px 10px;}
+.cost-section-title{font-size:0.63rem;font-weight:700;color:var(--ash);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;}
+.cost-total-wrap{display:flex;align-items:center;gap:6px;margin-bottom:8px;}
+.cost-lbl{font-size:0.68rem;color:var(--ash);font-weight:600;}
+.cost-input{width:90px;border:1.5px solid #e0d8cc;border-radius:7px;padding:4px 7px;font-size:0.76rem;font-family:'DM Sans',sans-serif;color:var(--char);outline:none;text-align:right;}
+.cost-input:focus{border-color:var(--sage);}
+.paid-by-lbl{font-size:0.64rem;color:var(--ash);font-weight:600;margin-bottom:5px;}
+.paid-by-list{display:flex;flex-direction:column;gap:5px;}
+.paid-by-row{display:flex;align-items:center;gap:8px;}
+.paid-by-person{display:flex;align-items:center;gap:5px;min-width:95px;}
+.paid-by-name{font-size:0.74rem;}
+.paid-amt-input{width:82px;border:1.5px solid #e0d8cc;border-radius:7px;padding:3px 7px;font-size:0.74rem;font-family:'DM Sans',sans-serif;text-align:right;outline:none;color:var(--char);}
+.paid-amt-input:focus{border-color:var(--sage);}
+.paid-amt-input.active-payer{border-color:var(--moss);background:#f0faf0;}
+.split-info{font-size:0.63rem;color:var(--ash);margin-top:6px;font-style:italic;}
+.add-item-row{display:flex;gap:5px;padding:7px 11px 10px;}
+.add-item-row input{flex:1;border:1.5px solid var(--smoke);border-radius:7px;padding:5px 9px;font-size:0.76rem;font-family:'DM Sans',sans-serif;color:var(--char);outline:none;}
+.add-item-row input:focus{border-color:var(--sage);}
+.add-item-row button{background:var(--forest);color:white;border:none;border-radius:7px;padding:5px 11px;font-size:0.76rem;font-family:'DM Sans',sans-serif;cursor:pointer;white-space:nowrap;}
+/* SUMMARY */
+.summary-wrap{padding:14px 12px 80px;max-width:740px;margin:0 auto;}
+.summary-card{background:white;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.07);margin-bottom:14px;}
+.summary-card-header{padding:11px 16px;font-family:'Abril Fatface',serif;font-size:0.95rem;background:#f5f0e8;}
+.summary-table{width:100%;border-collapse:collapse;}
+.summary-table th{font-size:0.63rem;font-weight:700;color:var(--ash);text-transform:uppercase;letter-spacing:0.4px;padding:7px 12px;text-align:left;border-bottom:1px solid #f0ebe0;background:#fafaf7;}
+.summary-table td{font-size:0.78rem;padding:8px 12px;border-bottom:1px solid #f5f0e8;}
+.summary-table tr:last-child td{border-bottom:none;}
+.summary-table .amount{text-align:right;font-weight:600;}
+.total-row td{font-weight:700;background:#f5f5ee;font-size:0.82rem;}
+.pos{color:#2d7d46;}.neg{color:#c0392b;}.neu{color:var(--ash);}
+.no-costs,.no-people{padding:20px;text-align:center;color:var(--ash);font-size:0.8rem;font-style:italic;}
+#loading{position:fixed;inset:0;background:var(--cream);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Abril Fatface',serif;font-size:1.3rem;color:var(--moss);z-index:999;gap:12px;}
+#loading p{font-size:0.8rem;font-family:'DM Sans',sans-serif;color:var(--ash);}
+.footer{text-align:center;padding:0 0 28px;font-size:0.65rem;color:var(--ash);}
+</style>
+</head>
+<body>
+<div id="loading">&#x1F332; Camp Ready<p>Connecting...</p></div>
+
+<header>
+  <h1>Camp Ready &#x1F332;</h1>
+  <p id="syncStatus">SHARED CAMPING LIST &middot; Connecting...</p>
+</header>
+
+<div class="tabs">
+  <div class="tab active" data-action="tab" data-tab="checklist">&#x1F4CB; Checklist</div>
+  <div class="tab" data-action="tab" data-tab="costs">&#x1F4B0; Costs &amp; Split</div>
+</div>
+
+<div class="people-bar">
+  <div class="people-bar-top">
+    <span class="people-bar-label">&#x1F465; Who's coming</span>
+    <div class="people-summary" id="peopleSummary"></div>
+    <span class="people-toggle" id="peopleToggle" data-action="togglePeople">&#x270F; Edit</span>
+  </div>
+  <div class="people-chips-wrap" id="peopleChipsWrap">
+    <div class="people-chips" id="peopleChips"></div>
+    <div class="add-person-inline">
+      <input type="text" id="personInput" placeholder="Add name..." maxlength="18">
+      <button id="addPersonBtn">+ Add</button>
+    </div>
+  </div>
+</div>
+
+<div class="progress-wrap" id="progressWrap">
+  <div class="progress-bar-outer"><div class="progress-bar-inner" id="progressBar"></div></div>
+  <span class="progress-label" id="progressLabel">0 / 0 packed</span>
+  <button data-action="resetChecks" class="btn-reset">Reset</button>
+</div>
+
+<!-- Modal overlay for assign dropdown -->
+<div class="modal-overlay" id="modalOverlay" data-action="closeModal"></div>
+<div class="assign-modal" id="assignModal" style="display:none;"></div>
+
+<div id="checklistTab"><main id="mainContainer"></main></div>
+<div id="costsTab" style="display:none;"><div class="summary-wrap" id="summaryContainer"></div></div>
+<div class="footer">&#x1F504; Syncs live via Firebase &middot; Share URL &middot; No login needed</div>
+
+<script>
+const FB_URL='https://camp-ready-72f67-default-rtdb.firebaseio.com/campstate.json';
+const AVATAR_COLORS=["#2d7d46","#c0392b","#2471a3","#d4840a","#7d3c98","#1a7a7a","#a04000","#884ea0","#117a65","#5d6d7e"];
+const CAT_COLORS={shelter:"#2d4a2d",cooking:"#5c3a1a",food:"#4a3520",drinks:"#1a3045",tableware:"#3a3a1a",hygiene:"#1a3a4a",safety:"#6b2020",lighting:"#2a2a4a",clothing:"#2a4a4a",comfort:"#4a2a2a"};
+const CURR='CA$';
+const DEFAULT_CATEGORIES=[
+  {id:"shelter",name:"Shelter & Sleep",icon:"&#x26FA;",items:[{label:"Tents",must:true},{label:"Plastic cover / tarpaulin for tents",must:true},{label:"Sleeping bags",must:true},{label:"Blankets"},{label:"Camping chairs"},{label:"Camping pillows"},{label:"Ground mat / foam pad"},{label:"Tent stakes / extra pegs"}]},
+  {id:"cooking",name:"Cooking & BBQ",icon:"&#x1F525;",items:[{label:"BBQ grill",must:true},{label:"Charcoal",must:true},{label:"Camping stove",must:true},{label:"Fuel for stove",must:true},{label:"Cast iron skillet"},{label:"BBQ tongs"},{label:"BBQ brush"},{label:"BBQ grill cleaner"},{label:"Baking / oven gloves"},{label:"Cutting board"},{label:"Knife"},{label:"Cooking oil"},{label:"Butter"},{label:"Aluminium foil"},{label:"Lighter / matches",must:true},{label:"Fire starter / kindling"}]},
+  {id:"food",name:"Food & Drinks",icon:"&#x1F357;",items:[{label:"Eggs"},{label:"Chicken"},{label:"Goat"},{label:"Beef steak"},{label:"Burger patties"},{label:"Sausages"},{label:"Corn"},{label:"Potato"},{label:"Mushrooms"},{label:"Broccoli"},{label:"Capsicum / bell pepper"},{label:"Bread"},{label:"Burger buns"},{label:"S'mores (marshmallows, chocolate, crackers)"},{label:"Tea"},{label:"Coffee"},{label:"Milk"},{label:"Salt"},{label:"Pepper"},{label:"Turmeric powder"},{label:"Chilli powder"},{label:"Chaat masala"},{label:"Onions"},{label:"Garlic"},{label:"Tomatoes"},{label:"Snacks / chips / nuts"},{label:"Drinking water / water bottles",must:true}]},
+  {id:"drinks",name:"Water & Storage",icon:"&#x1F4A7;",items:[{label:"Water",must:true},{label:"Coolers",must:true},{label:"Ice",must:true},{label:"Collapsible water container"},{label:"Reusable water bottles"},{label:"Water purification tablets / filter"}]},
+  {id:"tableware",name:"Tableware & Utensils",icon:"&#x1F37D;",items:[{label:"Paper plates"},{label:"Cups / glasses"},{label:"Spoons"},{label:"Forks"},{label:"Reusable bowls"},{label:"Can / bottle opener"},{label:"Dishwashing liquid"},{label:"Dish sponge / scrubber"},{label:"Wash basin / bucket"}]},
+  {id:"hygiene",name:"Hygiene & Toiletries",icon:"&#x1F6BF;",items:[{label:"Disposable toilet seat covers"},{label:"Paper soap / hand sanitiser",must:true},{label:"Flushable wipes"},{label:"Tissue paper"},{label:"Garbage bags"},{label:"Toothbrush & toothpaste"},{label:"Sunscreen"},{label:"Shampoo & body wash"},{label:"Towels"},{label:"String / clothesline to dry clothes"},{label:"Laundry clips / clothes pegs"}]},
+  {id:"safety",name:"Safety & First Aid",icon:"&#x1FA7A;",items:[{label:"First aid kit",must:true},{label:"Bug spray / insect repellent",must:true},{label:"Mosquito coil"},{label:"Power bank"},{label:"Whistle"},{label:"Emergency contact list"},{label:"Allergy medications / personal meds"}]},
+  {id:"lighting",name:"Lighting & Power",icon:"&#x1F526;",items:[{label:"Torch / flashlight",must:true},{label:"Tent lights"},{label:"Decorative / string lights"},{label:"Spare batteries"},{label:"Headlamps"},{label:"Solar lantern"}]},
+  {id:"clothing",name:"Clothing & Weather",icon:"&#x1F9E5;",items:[{label:"Change of clothes (per day)"},{label:"Rain poncho / waterproof jacket"},{label:"Warm layers / fleece"},{label:"Comfortable walking shoes / boots"},{label:"Hat / cap for sun"},{label:"Swimwear (if near water)"}]},
+  {id:"comfort",name:"Comfort & Fun",icon:"&#x1F3AE;",items:[{label:"Camping games / cards"},{label:"Books / e-reader"},{label:"Bluetooth speaker"},{label:"Camera"}]},
+];
+
+let state={categories:JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)),checked:{},people:[],assignments:{},costs:{},deletedItems:{}};
+let collapsed={},activeTab='checklist';
+let userIsTyping=false; // true while any input has focus
+let openModal=null; // {catId, idx, btnEl}
+
+function aC(n){let h=0;for(let i=0;i<n.length;i++)h=(h*31+n.charCodeAt(i))%AVATAR_COLORS.length;return AVATAR_COLORS[h];}
+function ini(n){return n.trim().split(/\s+/).map(w=>w[0].toUpperCase()).slice(0,2).join('');}
+function fmt(n){return CURR+' '+parseFloat(n||0).toFixed(2);}
+function ak(c,i){return c+'::'+i;}
+function ck(c,i,p){return c+'::'+i+'::'+p;}
+function avHTML(n,sz,ml){return `<span class="av" style="width:${sz}px;height:${sz}px;background:${aC(n)};font-size:${Math.round(sz*0.38)}px;${ml?'margin-left:'+ml+'px':''}">${ini(n)}</span>`;}
+
+function isAllChecked(catId,idx){
+  const a=(state.assignments||{})[ak(catId,idx)]||[];
+  if(!a.length)return !!state.checked[ck(catId,idx,'__solo')];
+  return a.every(p=>state.checked[ck(catId,idx,p)]);
+}
+function checkedCnt(catId,idx){
+  const a=(state.assignments||{})[ak(catId,idx)]||[];
+  if(!a.length)return state.checked[ck(catId,idx,'__solo')]?1:0;
+  return a.filter(p=>state.checked[ck(catId,idx,p)]).length;
+}
+
+// FIREBASE
+async function fbRead(){try{const r=await fetch(FB_URL);if(!r.ok)return null;return await r.json();}catch(e){return null;}}
+async function fbWrite(d){try{await fetch(FB_URL,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});}catch(e){}}
+function setSS(m){document.getElementById('syncStatus').textContent='SHARED CAMPING LIST \u00b7 '+m;}
+
+// Debounced save - waits 800ms, NEVER saves categories (always from defaults)
+let saveTimer=null;
+function saveToCloud(){
+  setSS('Saving...');
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(async()=>{
+    try{
+      // Only save user data - categories are always loaded from DEFAULT_CATEGORIES
+      const toSave={
+        people:state.people,
+        checked:state.checked,
+        assignments:state.assignments,
+        costs:state.costs,
+        customItems:getCustomItems(),
+        deletedItems:state.deletedItems||{}
+      };
+      await fbWrite(toSave);
+      setSS('Saved '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));
+    }catch(e){setSS('Save failed - will retry');}
+  },800);
+}
+// Returns only items that were added by users (not in defaults)
+function getCustomItems(){
+  const custom={};
+  state.categories.forEach(cat=>{
+    const def=DEFAULT_CATEGORIES.find(d=>d.id===cat.id);
+    if(!def)return;
+    const defLabels=def.items.map(i=>i.label);
+    const extras=cat.items.filter(i=>!defLabels.includes(i.label));
+    if(extras.length)custom[cat.id]=extras;
+  });
+  return custom;
+}
+async function pollCloud(){
+  if(saveTimer)return; // don't overwrite if save pending
+  try{
+    const r=await fbRead();
+    if(!r)return;
+    // Compare only user data (not categories which are always from defaults)
+    const changed=
+      JSON.stringify(r.people)!==JSON.stringify(state.people)||
+      JSON.stringify(r.checked)!==JSON.stringify(state.checked)||
+      JSON.stringify(r.assignments)!==JSON.stringify(state.assignments)||
+      JSON.stringify(r.costs)!==JSON.stringify(state.costs)||
+      JSON.stringify(r.customItems)!==JSON.stringify(getCustomItems());
+    if(changed){
+      // Don't re-render while user is actively typing in an input
+      if(userIsTyping)return;
+      // Always rebuild from DEFAULT_CATEGORIES fresh — prevents duplicates
+      const freshCats=JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+      if(r.customItems){
+        Object.entries(r.customItems).forEach(([catId,extras])=>{
+          const cat=freshCats.find(c=>c.id===catId);
+          if(cat&&Array.isArray(extras)){
+            extras.forEach(ri=>{if(!cat.items.find(di=>di.label===ri.label))cat.items.push(ri);});
+          }
+        });
+      }
+      // Apply deleted items to fresh categories
+      const delItems=r.deletedItems||{};
+      Object.entries(delItems).forEach(([catId,labels])=>{
+        const cat=freshCats.find(c=>c.id===catId);
+        if(cat&&Array.isArray(labels)) cat.items=cat.items.filter(i=>!labels.includes(i.label));
+      });
+      state.categories   = freshCats;
+      state.people       = r.people       || [];
+      state.checked      = r.checked      || {};
+      state.assignments  = r.assignments  || {};
+      state.costs        = r.costs        || {};
+      state.deletedItems = r.deletedItems || {};
+      renderAll();
+      if(activeTab==='costs') renderSummary();
+      setSS('Synced '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));
+    }
+  }catch(e){}
+}
+async function init(){
+  const r=await fbRead();
+  if(r){
+    // Always start from DEFAULT_CATEGORIES - never from Firebase
+    state.people       = r.people       || [];
+    state.checked      = r.checked      || {};
+    state.assignments  = r.assignments  || {};
+    state.costs        = r.costs        || {};
+    state.deletedItems = r.deletedItems || {};
+    // Re-apply custom items users added
+    if(r.customItems){
+      Object.entries(r.customItems).forEach(([catId,extras])=>{
+        const cat=state.categories.find(c=>c.id===catId);
+        if(cat&&Array.isArray(extras)){
+          extras.forEach(ri=>{if(!cat.items.find(di=>di.label===ri.label))cat.items.push(ri);});
+        }
+      });
+    }
+    // Remove items users deleted
+    if(r.deletedItems){
+      Object.entries(r.deletedItems).forEach(([catId,labels])=>{
+        const cat=state.categories.find(c=>c.id===catId);
+        if(cat&&Array.isArray(labels)) cat.items=cat.items.filter(i=>!labels.includes(i.label));
+      });
+    }
+    // Never write back to Firebase on load
+  }
+  // If Firebase is empty, first save will seed it when user makes a change
+  setSS('Live · share this URL with your group');
+  document.getElementById('loading').style.display='none';
+  renderAll();
+  setInterval(pollCloud,6000);
+}
+
+// MODAL
+function openAssignModal(catId,idx,btnEl){
+  openModal={catId,idx};
+  const modal=document.getElementById('assignModal');
+  const overlay=document.getElementById('modalOverlay');
+  const assigned=(state.assignments||{})[ak(catId,idx)]||[];
+  let html=`<div class="modal-title">Assign Responsibility</div>`;
+  if(!state.people.length){html+=`<div class="no-people">Add people above first</div>`;}
+  else{
+    state.people.forEach(n=>{
+      const sel=assigned.includes(n);
+      html+=`<div class="modal-item${sel?' selected':''}" data-action="assignPerson" data-cat="${catId}" data-idx="${idx}" data-name="${n}">
+        <span class="dd-check">${sel?'&#x2713;':''}</span>${avHTML(n,20,0)}<span>${n}</span></div>`;
+    });
+    if(assigned.length){html+=`<div class="clear-btn" data-action="clearAssign" data-cat="${catId}" data-idx="${idx}">&#x1F6AB; Clear all</div>`;}
+  }
+  modal.innerHTML=html;
+  // Position near button
+  const rect=btnEl.getBoundingClientRect();
+  modal.style.display='block';
+  const mw=Math.max(180,modal.offsetWidth);
+  let left=rect.right-mw;
+  if(left<8)left=8;
+  if(left+mw>window.innerWidth-8)left=window.innerWidth-mw-8;
+  let top=rect.bottom+6;
+  if(top+modal.offsetHeight>window.innerHeight-8)top=rect.top-modal.offsetHeight-6;
+  modal.style.left=left+'px';modal.style.top=top+'px';modal.style.width=mw+'px';
+  overlay.classList.add('open');
+}
+function closeModal(){
+  document.getElementById('assignModal').style.display='none';
+  document.getElementById('modalOverlay').classList.remove('open');
+  openModal=null;
+}
+
+// ACTIONS (all called from event delegation)
+function doToggleCheck(catId,idx){
+  const a=(state.assignments||{})[ak(catId,idx)]||[];
+  if(a.length>1){
+    const allDone=a.every(p=>state.checked[ck(catId,idx,p)]);
+    if(allDone){a.forEach(p=>delete state.checked[ck(catId,idx,p)]);}
+    else{const next=a.find(p=>!state.checked[ck(catId,idx,p)]);if(next)state.checked[ck(catId,idx,next)]=true;}
+  }else if(a.length===1){const k=ck(catId,idx,a[0]);if(state.checked[k])delete state.checked[k];else state.checked[k]=true;}
+  else{const k=ck(catId,idx,'__solo');if(state.checked[k])delete state.checked[k];else state.checked[k]=true;}
+  updateItemDOM(catId,idx);saveToCloud();
+}
+function doCheckByPerson(catId,idx,person){
+  const k=ck(catId,idx,person);
+  if(state.checked[k])delete state.checked[k];else state.checked[k]=true;
+  updateItemDOM(catId,idx);saveToCloud();
+}
+function doAssignPerson(catId,idx,name){
+  if(!state.assignments)state.assignments={};
+  const k=ak(catId,idx),cur=state.assignments[k]||[];
+  state.assignments[k]=cur.includes(name)?cur.filter(p=>p!==name):[...cur,name];
+  if(!state.assignments[k].length)delete state.assignments[k];
+  // refresh modal in place
+  const btnEl=document.querySelector(`[data-assign-btn][data-cat="${catId}"][data-idx="${idx}"]`);
+  if(btnEl)openAssignModal(catId,idx,btnEl);
+  updateItemDOM(catId,idx);saveToCloud();
+}
+function doClearAssign(catId,idx){
+  delete state.assignments[ak(catId,idx)];
+  closeModal();updateItemDOM(catId,idx);saveToCloud();
+}
+function doDeleteItem(catId,idx){
+  const cat=state.categories.find(c=>c.id===catId);if(!cat)return;
+  const deletedLabel=cat.items[idx].label;
+  cat.items.splice(idx,1);
+  const nChk={},nA={},nC={};
+  Object.keys(state.checked).forEach(k=>{const p=k.split('::');if(p[0]===catId){const i=parseInt(p[1]);if(i<idx)nChk[k]=state.checked[k];else if(i>idx)nChk[p[0]+'::'+(i-1)+'::'+p[2]]=state.checked[k];}else nChk[k]=state.checked[k];});
+  Object.keys(state.assignments||{}).forEach(k=>{const[c,s]=k.split('::');const i=parseInt(s);if(c===catId){if(i<idx)nA[k]=state.assignments[k];else if(i>idx)nA[c+'::'+(i-1)]=state.assignments[k];}else nA[k]=state.assignments[k];});
+  Object.keys(state.costs||{}).forEach(k=>{const[c,s]=k.split('::');const i=parseInt(s);if(c===catId){if(i<idx)nC[k]=state.costs[k];else if(i>idx)nC[c+'::'+(i-1)]=state.costs[k];}else nC[k]=state.costs[k];});
+  state.checked=nChk;state.assignments=nA;state.costs=nC;
+  // Track deleted item label so it doesn't reappear on reload
+  if(!state.deletedItems)state.deletedItems={};
+  if(!state.deletedItems[catId])state.deletedItems[catId]=[];
+  if(!state.deletedItems[catId].includes(deletedLabel)) state.deletedItems[catId].push(deletedLabel);
+  // Remove item from DOM directly, then just update count
+  const itemEl=document.getElementById('item-'+catId+'-'+idx);
+  if(itemEl)itemEl.remove();
+  // Re-index remaining item IDs in this category
+  const cat2=state.categories.find(c=>c.id===catId);
+  if(cat2){cat2.items.forEach((_,i)=>{
+    const el=document.getElementById('item-'+catId+'-'+(i+1));
+    if(el)el.id='item-'+catId+'-'+i;
+  });}
+  updateProgress();
+  saveToCloud();
+}
+function doAddItem(catId){
+  const inp=document.getElementById('add-'+catId);
+  const label=(inp.value||'').trim();if(!label)return;
+  const cat=state.categories.find(c=>c.id===catId);if(!cat)return;
+  const newIdx=cat.items.length;
+  cat.items.push({label});inp.value='';
+  // Append item directly to DOM
+  const iw=document.getElementById('items-'+catId);
+  if(iw){
+    const addRow=iw.querySelector('.add-item-row');
+    const div=document.createElement('div');
+    div.innerHTML=buildItemHTML(cat,{label},newIdx);
+    iw.insertBefore(div.firstChild,addRow);
+  }
+  updateProgress();saveToCloud();
+}
+function doAddPerson(){
+  const inp=document.getElementById('personInput');
+  const name=(inp.value||'').trim();inp.value='';inp.blur();
+  if(!name||state.people.includes(name))return;
+  state.people.push(name);renderPeople();saveToCloud();
+  // Re-focus input so user can keep adding more people
+  setTimeout(()=>{const i=document.getElementById('personInput');if(i)i.focus();},50);
+}
+function doRemovePerson(name){
+  state.people=state.people.filter(p=>p!==name);
+  Object.keys(state.assignments||{}).forEach(k=>{state.assignments[k]=(state.assignments[k]||[]).filter(p=>p!==name);if(!state.assignments[k].length)delete state.assignments[k];});
+  Object.keys(state.costs||{}).forEach(k=>{if(state.costs[k]&&state.costs[k].paidBy)delete state.costs[k].paidBy[name];});
+  Object.keys(state.checked).forEach(k=>{if(k.endsWith('::'+name))delete state.checked[k];});
+  renderPeople();saveToCloud();
+}
+function doCostTotal(catId,idx,val){
+  if(!state.costs)state.costs={};const k=ak(catId,idx);
+  if(!state.costs[k])state.costs[k]={total:0,paidBy:{}};
+  const oldTotal=state.costs[k].total;
+  state.costs[k].total=parseFloat(val)||0;
+  // If going from 0 to non-zero (or vice versa), need to show/hide paid-by section
+  const wasZero=!oldTotal||oldTotal===0;
+  const isZero=!state.costs[k].total||state.costs[k].total===0;
+  if(wasZero!==isZero){
+    updateCostDOM(catId,idx); // only rebuild when section visibility changes
+  } else {
+    // Just update split info text without rebuilding inputs
+    const costSec=document.getElementById('cost-'+catId+'-'+idx);
+    if(costSec&&state.people.length>0&&state.costs[k].total>0){
+      const si=costSec.querySelector('.split-info');
+      if(si)si.textContent='Split equally: '+CURR+' '+(state.costs[k].total/state.people.length).toFixed(2)+' each ('+state.people.length+' people)';
+    }
+  }
+  if(activeTab==='costs') renderSummary();
+  saveToCloud();
+}
+function doPaidAmt(catId,idx,name,val){
+  if(!state.costs)state.costs={};const k=ak(catId,idx);
+  if(!state.costs[k])state.costs[k]={total:0,paidBy:{}};
+  const v=parseFloat(val)||0;
+  state.costs[k].paidBy[name]=v;
+  // Update sync status to confirm this fired
+  setSS('Paid: '+name+' '+fmt(v)+' (saving...)');
+  if(activeTab==='costs') renderSummary();
+  saveToCloud();
+}
+function doResetChecks(){
+  state.checked={};
+  state.categories.forEach(cat=>cat.items.forEach((_,idx)=>updateItemDOM(cat.id,idx)));
+  updateProgress();saveToCloud();
+}
+function doSwitchTab(tab){
+  activeTab=tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
+  document.getElementById('checklistTab').style.display=tab==='checklist'?'block':'none';
+  document.getElementById('costsTab').style.display=tab==='costs'?'block':'none';
+  document.getElementById('progressWrap').style.display=tab==='checklist'?'flex':'none';
+  if(tab==='costs')renderSummary();
+}
+
+// EVENT DELEGATION - single listener, never removed
+function handleAction(e){
+  const el=e.target.closest('[data-action]');
+  if(!el)return;
+  const action=el.dataset.action;
+  e.preventDefault();
+  if(action==='tab'){doSwitchTab(el.dataset.tab);}
+  else if(action==='resetChecks'){doResetChecks();}
+  else if(action==='closeModal'){closeModal();}
+  else if(action==='togglePeople'){
+    const wrap=document.getElementById('peopleChipsWrap');
+    const btn=document.getElementById('peopleToggle');
+    const isOpen=wrap.classList.toggle('open');
+    btn.innerHTML=isOpen?'&#x2715; Close':'&#x270F; Edit';
+  }
+  else if(action==='openAssign'){openAssignModal(el.dataset.cat,parseInt(el.dataset.idx),el);}
+  else if(action==='assignPerson'){doAssignPerson(el.dataset.cat,parseInt(el.dataset.idx),el.dataset.name);}
+  else if(action==='clearAssign'){doClearAssign(el.dataset.cat,parseInt(el.dataset.idx));}
+  else if(action==='toggleCheck'){doToggleCheck(el.dataset.cat,parseInt(el.dataset.idx));}
+  else if(action==='checkByPerson'){doCheckByPerson(el.dataset.cat,parseInt(el.dataset.idx),el.dataset.name);}
+  else if(action==='deleteItem'){doDeleteItem(el.dataset.cat,parseInt(el.dataset.idx));}
+  else if(action==='addItem'){doAddItem(el.dataset.cat);}
+  else if(action==='removePerson'){doRemovePerson(el.dataset.name);}
+  else if(action==='toggleCat'){
+    collapsed[el.dataset.cat]=!collapsed[el.dataset.cat];
+    const items=document.getElementById('items-'+el.dataset.cat);
+    const chevron=el.querySelector('.chevron');
+    if(collapsed[el.dataset.cat]){items.style.maxHeight='0';if(chevron)chevron.style.transform='rotate(-90deg)';}
+    else{items.style.maxHeight='99999px';if(chevron)chevron.style.transform='';}
+  }
+}
+// Use touchend on touch devices, click on desktop. Never both.
+let lastTouchEnd=0;
+document.addEventListener('touchend',function(e){
+  const el=e.target.closest('[data-action]');
+  if(!el)return;
+  e.preventDefault();
+  lastTouchEnd=Date.now();
+  handleAction(e);
+},{passive:false});
+document.addEventListener('click',function(e){
+  // Skip if a touchend just fired (within 500ms) — prevents double-fire on mobile
+  if(Date.now()-lastTouchEnd<500)return;
+  handleAction(e);
+},{passive:false});
+
+// PARTIAL DOM UPDATES (faster, no re-render)
+function updateItemDOM(catId,idx){
+  const itemEl=document.getElementById('item-'+catId+'-'+idx);
+  if(!itemEl){renderCategories();return;}
+  const assigned=(state.assignments||{})[ak(catId,idx)]||[];
+  const allDone=isAllChecked(catId,idx);
+  const cnt=checkedCnt(catId,idx);
+  // checkbox
+  const chk=itemEl.querySelector('.check-box');
+  if(chk){chk.className='check-box'+(allDone?' done':cnt>0?' partial':'');chk.innerHTML=allDone?'&#x2713;':cnt>0?'~':'';}
+  // label
+  const lbl=itemEl.querySelector('.item-label');
+  if(lbl)itemEl.classList.toggle('all-checked',allDone);
+  // avatars on assign btn row
+  const avRow=itemEl.querySelector('.avatars-row');
+  if(avRow){avRow.innerHTML=assigned.map((n,ai)=>avHTML(n,23,ai>0?-7:0)).join('');}
+  const aBtn=itemEl.querySelector('[data-assign-btn]');
+  if(aBtn){aBtn.className='assign-btn'+(assigned.length?' has-assigned':'');aBtn.innerHTML=assigned.length?'&#x270E;':'+';}
+  // per-person checker row
+  const cbRow=itemEl.querySelector('.checked-by-row');
+  if(cbRow){
+    if(assigned.length>1){
+      cbRow.innerHTML=assigned.map(p=>{
+        const done=state.checked[ck(catId,idx,p)];
+        return `<span class="checker-badge${done?' done-check':''}" data-action="checkByPerson" data-cat="${catId}" data-idx="${idx}" data-name="${p}">${avHTML(p,16,0)}<span>${p}${done?' &#x2713;':''}</span></span>`;
+      }).join('');
+      cbRow.style.display='flex';
+    }else{cbRow.innerHTML='';cbRow.style.display='none';}
+  }
+  // progress
+  updateProgress();
+}
+function updateCostDOM(catId,idx){
+  const costSec=document.getElementById('cost-'+catId+'-'+idx);
+  if(!costSec)return;
+  const cost=(state.costs||{})[ak(catId,idx)]||{total:0,paidBy:{}};
+  const paidList=costSec.querySelector('.paid-by-list');
+  const splitInfo=costSec.querySelector('.split-info');
+  const paidLbl=costSec.querySelector('.paid-by-lbl');
+  if(cost.total>0&&state.people.length>0){
+    if(!paidList){
+      const pl=document.createElement('div');pl.className='paid-by-lbl';pl.textContent='Who paid? (enter amount)';
+      costSec.appendChild(pl);
+      const list=document.createElement('div');list.className='paid-by-list';
+      state.people.forEach(n=>{
+        const row=document.createElement('div');row.className='paid-by-row';
+        row.innerHTML=`<div class="paid-by-person">${avHTML(n,20,0)}<span class="paid-by-name">${n}</span></div>`;
+        const inp=document.createElement('input');inp.type='number';inp.className='paid-amt-input';inp.placeholder='0.00';inp.min='0';inp.step='0.01';
+        const v=(cost.paidBy||{})[n];inp.value=v!=null&&v!==''?v:'';if(v>0)inp.classList.add('active-payer');
+        inp.dataset.payer=encodeURIComponent(n);inp.dataset.cat=catId;inp.dataset.idx=idx;
+        // handled via document-level change+input delegation
+        row.appendChild(inp);list.appendChild(row);
+      });
+      costSec.appendChild(list);
+      const si=document.createElement('div');si.className='split-info';
+      si.textContent=`Split equally: ${CURR} ${(cost.total/state.people.length).toFixed(2)} each (${state.people.length} people)`;
+      costSec.appendChild(si);
+    }else{
+      if(splitInfo)splitInfo.textContent=`Split equally: ${CURR} ${(cost.total/state.people.length).toFixed(2)} each (${state.people.length} people)`;
+    }
+  }else{
+    if(paidList)paidList.remove();
+    if(paidLbl)paidLbl.remove();
+    if(splitInfo)splitInfo.remove();
+  }
+}
+function updateProgress(){
+  let total=0,done=0;
+  state.categories.forEach(cat=>cat.items.forEach((_,idx)=>{total++;if(isAllChecked(cat.id,idx))done++;}));
+  const pct=total?Math.round((done/total)*100):0;
+  document.getElementById('progressBar').style.width=pct+'%';
+  document.getElementById('progressLabel').textContent=`${done} / ${total} packed`;
+  // update cat counts
+  state.categories.forEach(cat=>{
+    const done=cat.items.filter((_,idx)=>isAllChecked(cat.id,idx)).length;
+    const countEl=document.getElementById('catcount-'+cat.id);
+    if(countEl)countEl.textContent=done+'/'+cat.items.length;
+  });
+}
+
+// FULL RENDERS
+function renderAll(){renderPeople();renderCategories();}
+
+function renderPeople(){
+  // Chips inside collapsible panel
+  document.getElementById('peopleChips').innerHTML=state.people.map(n=>
+    `<span class="person-chip">${avHTML(n,19,0)}${n}<span class="rm" data-action="removePerson" data-name="${n}">&#x2715;</span></span>`
+  ).join('');
+  // Compact avatar row always visible
+  const summary=document.getElementById('peopleSummary');
+  if(summary){
+    const MAX=8;
+    const shown=state.people.slice(0,MAX);
+    const extra=state.people.length-MAX;
+    summary.innerHTML=shown.map((n,i)=>avHTML(n,20,i>0?-5:0)).join('')+
+      (extra>0?`<span style="font-size:0.68rem;color:var(--ash);font-weight:600;margin-left:4px">+${extra}</span>`:'');
+  }
+}
+
+function renderCategories(){
+  const container=document.getElementById('mainContainer');container.innerHTML='';
+  state.categories.forEach(cat=>{
+    const isCol=!!collapsed[cat.id];
+    const doneCount=cat.items.filter((_,idx)=>isAllChecked(cat.id,idx)).length;
+    const color=CAT_COLORS[cat.id]||'#333';
+    container.innerHTML+=`
+    <div class="category${isCol?' collapsed':''}">
+      <div class="cat-header" data-action="toggleCat" data-cat="${cat.id}" style="background:${color}">
+        <span class="icon">${cat.icon}</span>
+        <span class="cat-name">${cat.name}</span>
+        <span class="cat-count" id="catcount-${cat.id}">${doneCount}/${cat.items.length}</span>
+        <span class="chevron" style="${isCol?'transform:rotate(-90deg)':''}">&#x25BC;</span>
+      </div>
+      <div class="cat-items" id="items-${cat.id}" style="max-height:${isCol?'0':'99999px'}">
+        ${cat.items.map((item,idx)=>buildItemHTML(cat,item,idx)).join('')}
+        <div class="add-item-row">
+          <input type="text" id="add-${cat.id}" placeholder="Add item..." data-add-cat="${cat.id}">
+          <button data-action="addItem" data-cat="${cat.id}">+ Add</button>
+        </div>
+      </div>
+    </div>`;
+  });
+  // Inputs handled via document-level delegation below
+  updateProgress();
+}
+
+function buildItemHTML(cat,item,idx){
+  const catId=cat.id;
+  const assigned=(state.assignments||{})[ak(catId,idx)]||[];
+  const allDone=isAllChecked(catId,idx);
+  const cnt=checkedCnt(catId,idx);
+  const cost=(state.costs||{})[ak(catId,idx)]||{total:0,paidBy:{}};
+  const avatarsHTML=assigned.map((n,ai)=>avHTML(n,23,ai>0?-7:0)).join('');
+  const checkerHTML=assigned.length>1?assigned.map(p=>{
+    const done=state.checked[ck(catId,idx,p)];
+    return `<span class="checker-badge${done?' done-check':''}" data-action="checkByPerson" data-cat="${catId}" data-idx="${idx}" data-name="${p}">${avHTML(p,16,0)}<span>${p}${done?' &#x2713;':''}</span></span>`;
+  }).join(''):'';
+
+  let costHTML=`
+    <div class="cost-total-wrap">
+      <span class="cost-lbl">${CURR}</span>
+      <input type="number" id="costinput-${catId}-${idx}" class="cost-input" placeholder="0.00" min="0" step="0.01" value="${cost.total||''}" data-cost-cat="${catId}" data-cost-idx="${idx}">
+    </div>`;
+  if((cost.total||0)>0&&state.people.length>0){
+    const equalShare=(cost.total/state.people.length).toFixed(2);
+    costHTML+=`<div class="paid-by-lbl">Who paid? (enter amount)</div><div class="paid-by-list">`;
+    state.people.forEach((n,pi)=>{
+      const v=(cost.paidBy||{})[n];
+      const isActive=v!=null&&v>0;
+      // Use person index (pi) to avoid name encoding issues
+      costHTML+=`<div class="paid-by-row">
+        <div class="paid-by-person">${avHTML(n,20,0)}<span class="paid-by-name">${n}</span></div>
+        <input type="number" class="paid-amt-input${isActive?' active-payer':''}" 
+          id="paid-${catId}-${idx}-${pi}"
+          data-payer="${encodeURIComponent(n)}" data-cat="${catId}" data-idx="${idx}"
+          placeholder="0.00" min="0" step="0.01" value="${v!=null&&v!==''?v:''}">
+      </div>`;
+    });
+    costHTML+=`</div><div class="split-info">Split equally: ${CURR} ${equalShare} each (${state.people.length} people)</div>`;
+  }
+
+  return `
+  <div class="item${allDone?' all-checked':''}" id="item-${catId}-${idx}">
+    <div class="item-main">
+      <div class="check-box${allDone?' done':cnt>0?' partial':''}" data-action="toggleCheck" data-cat="${catId}" data-idx="${idx}">${allDone?'&#x2713;':cnt>0?'~':''}</div>
+      <span class="item-label" data-action="toggleCheck" data-cat="${catId}" data-idx="${idx}">${item.label}</span>
+      ${item.must?'<span class="badge-must">Must</span>':''}
+      <span class="avatars-row">${avatarsHTML}</span>
+      <button class="assign-btn${assigned.length?' has-assigned':''}" data-action="openAssign" data-assign-btn data-cat="${catId}" data-idx="${idx}">${assigned.length?'&#x270E;':'+'}</button>
+      <button class="del-btn" data-action="deleteItem" data-cat="${catId}" data-idx="${idx}">&#x1F5D1;</button>
+    </div>
+    <div class="checked-by-row" style="${assigned.length>1?'display:flex':'display:none'}">${checkerHTML}</div>
+    <div class="cost-section" id="cost-${catId}-${idx}">
+      <div class="cost-section-title">&#x1F4B0; Cost</div>
+      ${costHTML}
+    </div>
+  </div>`;
+}
+
+// Track when user is actively typing so poll doesn't wipe their input
+document.addEventListener('focusin', function(e){
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') userIsTyping=true;
+});
+document.addEventListener('focusout', function(e){
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'){
+    // Small delay — blur fires before change on mobile sometimes
+    setTimeout(()=>{ userIsTyping=false; },1000);
+  }
+});
+
+// Single document-level input delegation - handles ALL inputs, no stacking
+function handleInputChange(e){
+  const inp=e.target;
+  // Cost total input
+  if(inp.dataset.costCat&&inp.dataset.costIdx!=null){
+    doCostTotal(inp.dataset.costCat,parseInt(inp.dataset.costIdx),inp.value);
+    return;
+  }
+  // Paid-by amount input - capture on every keystroke via 'input' event
+  if(inp.dataset.payer&&inp.dataset.cat&&inp.dataset.idx!=null){
+    const personName=decodeURIComponent(inp.dataset.payer);
+    doPaidAmt(inp.dataset.cat,parseInt(inp.dataset.idx),personName,inp.value);
+    if(parseFloat(inp.value)>0)inp.classList.add('active-payer');else inp.classList.remove('active-payer');
+    return;
+  }
+}
+document.addEventListener('change', handleInputChange);
+document.addEventListener('input', handleInputChange);
+// Add-item Enter key - delegated
+document.addEventListener('keyup',function(e){
+  if(e.key!=='Enter')return;
+  const inp=e.target;
+  if(inp.dataset.addCat){doAddItem(inp.dataset.addCat);}
+  else if(inp.id==='personInput'){doAddPerson();}
+});
+
+// SUMMARY
+function renderSummary(){
+  const wrap=document.getElementById('summaryContainer');wrap.innerHTML='';
+  if(!state.people.length){wrap.innerHTML='<div class="no-people">Add people first in the Checklist tab</div>';return;}
+  const paid={},owed={};state.people.forEach(p=>{paid[p]=0;owed[p]=0;});
+  let tripTotal=0;
+  state.categories.forEach(cat=>{
+    cat.items.forEach((_,idx)=>{
+      const k=ak(cat.id,idx);const c=(state.costs||{})[k];
+      if(!c||!c.total)return;
+      tripTotal+=c.total;
+      const share=c.total/state.people.length;
+      state.people.forEach(p=>{owed[p]+=share;});
+      Object.entries(c.paidBy||{}).forEach(([p,amt])=>{if(paid[p]!=null)paid[p]+=parseFloat(amt)||0;});
+    });
+  });
+  const hasCosts=tripTotal>0;
+  let html=`<div class="summary-card"><div class="summary-card-header">&#x1F4B3; Summary Per Person</div>`;
+  if(!hasCosts){html+='<div class="no-costs">No costs entered yet</div>';}
+  else{
+    html+='<table class="summary-table"><tr><th>Person</th><th style="text-align:right">Paid</th><th style="text-align:right">Fair Share</th><th style="text-align:right">Balance</th></tr>';
+    state.people.forEach(p=>{
+      const bal=(paid[p]||0)-(owed[p]||0);
+      const cls=bal>0.01?'pos':bal<-0.01?'neg':'neu';
+      const sign=bal>0.01?'+':'';
+      html+=`<tr><td><div style="display:flex;align-items:center;gap:6px">${avHTML(p,22,0)}${p}</div></td>
+        <td class="amount neu">${fmt(paid[p]||0)}</td><td class="amount neu">${fmt(owed[p]||0)}</td>
+        <td class="amount ${cls}">${sign}${fmt(bal)}</td></tr>`;
+    });
+    html+=`<tr class="total-row"><td>Trip Total</td><td class="amount" colspan="3">${fmt(tripTotal)}</td></tr>`;
+    html+='</table>';
+  }
+  html+='</div>';
+  html+=`<div class="summary-card"><div class="summary-card-header">&#x1F4C2; Cost by Category</div>`;
+  html+='<table class="summary-table"><tr><th>Category</th><th style="text-align:right">Total</th></tr>';
+  let any=false;
+  state.categories.forEach(cat=>{
+    let ct=0;cat.items.forEach((_,idx)=>{const c=(state.costs||{})[ak(cat.id,idx)];if(c&&c.total)ct+=c.total;});
+    if(ct>0){any=true;html+=`<tr><td>${cat.icon} ${cat.name}</td><td class="amount pos">${fmt(ct)}</td></tr>`;}
+  });
+  if(!any)html+='<tr><td colspan="2" style="text-align:center;color:var(--ash);font-style:italic;padding:14px">No costs yet</td></tr>';
+  html+=`<tr class="total-row"><td>Grand Total</td><td class="amount">${fmt(tripTotal)}</td></tr></table></div>`;
+  wrap.innerHTML=html;
+}
+
+// PEOPLE INPUTS
+const addBtn=document.getElementById('addPersonBtn');
+addBtn.addEventListener('touchend',function(e){e.preventDefault();doAddPerson();},{passive:false});
+addBtn.addEventListener('click',function(e){if(Date.now()-lastTouchEnd<500)return;doAddPerson();});
+// personInput Enter key handled by document-level keyup delegation above
+
+init();
+</script>
+</body>
+</html>
